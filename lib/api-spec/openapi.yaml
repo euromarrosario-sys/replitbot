@@ -1,0 +1,358 @@
+openapi: 3.1.0
+info:
+  title: Api
+  version: 0.1.0
+  description: Trading Bot Dashboard API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: bot
+    description: Trading bot data
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /bot/signals:
+    get:
+      operationId: getSignals
+      tags: [bot]
+      summary: Recent OB scan signals
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100 }
+      responses:
+        "200":
+          description: List of recent signal scans
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Signal"
+
+  /bot/trades:
+    get:
+      operationId: getTrades
+      tags: [bot]
+      summary: Recent trade decisions (approved + rejected)
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100 }
+      responses:
+        "200":
+          description: List of trade decisions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Trade"
+
+  /bot/positions:
+    get:
+      operationId: getPositions
+      tags: [bot]
+      summary: Closed paper positions with realised P&L
+      responses:
+        "200":
+          description: List of closed positions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Position"
+
+  /bot/summary:
+    get:
+      operationId: getSummary
+      tags: [bot]
+      summary: Aggregated bot performance stats
+      responses:
+        "200":
+          description: Summary statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BotSummary"
+
+  /bot/symbol-stats:
+    get:
+      operationId: getSymbolStats
+      tags: [bot]
+      summary: Per-symbol performance breakdown
+      responses:
+        "200":
+          description: List of per-symbol stats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SymbolStat"
+
+  /bot/sizing:
+    get:
+      operationId: getSizing
+      tags: [bot]
+      summary: Adaptive sizing history for approved trades
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 100 }
+      responses:
+        "200":
+          description: List of sizing records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SizingRecord"
+
+  /bot/alerts:
+    get:
+      operationId: getAlerts
+      tags: [bot]
+      summary: Strategy health alerts (degradation, etc.)
+      responses:
+        "200":
+          description: Alerts response with timestamp and alert list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AlertsResponse"
+
+  /bot/summary-blocks:
+    get:
+      operationId: getSummaryBlocks
+      tags: [bot]
+      summary: Block aggregate metrics from extended simulation (summary.csv)
+      responses:
+        "200":
+          description: List of block performance records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SummaryBlock"
+
+  /bot/pnl-curve:
+    get:
+      operationId: getPnlCurve
+      tags: [bot]
+      summary: Cumulative P&L over time for equity curve chart
+      responses:
+        "200":
+          description: List of P&L curve points
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/PnlPoint"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      required: [status]
+      properties:
+        status: { type: string }
+
+    Signal:
+      type: object
+      required: [timestamp, symbol, ob_signal, ob_confidence, bid_ask_ratio]
+      properties:
+        timestamp:               { type: string }
+        symbol:                  { type: string }
+        ob_signal:               { type: string }
+        ob_confidence:           { type: string }
+        bid_ask_ratio:           { type: ["number", "null"] }
+        spread_pct:              { type: ["number", "null"] }
+        bid_wall_conc:           { type: ["number", "null"] }
+        ask_wall_conc:           { type: ["number", "null"] }
+        indicator_filter_passed: { type: ["string", "null"] }
+        filter_reason:           { type: ["string", "null"] }
+        rsi:                     { type: ["number", "null"] }
+        ema_fast:                { type: ["number", "null"] }
+        ema_slow:                { type: ["number", "null"] }
+        atr:                     { type: ["number", "null"] }
+        volume_ratio:            { type: ["number", "null"] }
+
+    Trade:
+      type: object
+      required: [timestamp, symbol, allowed]
+      properties:
+        timestamp:            { type: string }
+        symbol:               { type: string }
+        signal:               { type: ["string", "null"] }
+        entry_price:          { type: ["number", "null"] }
+        stop_loss:            { type: ["number", "null"] }
+        take_profit:          { type: ["number", "null"] }
+        rr_ratio:             { type: ["number", "null"] }
+        quantity:             { type: ["number", "null"] }
+        notional:             { type: ["number", "null"] }
+        margin_used:          { type: ["number", "null"] }
+        margin_pct:           { type: ["number", "null"] }
+        total_cost:           { type: ["number", "null"] }
+        gross_profit:         { type: ["number", "null"] }
+        net_profit:           { type: ["number", "null"] }
+        dollar_risk_target:   { type: ["number", "null"] }
+        dollar_risk_actual:   { type: ["number", "null"] }
+        reduction_factor:     { type: ["number", "null"] }
+        adjustment_reason:    { type: ["string", "null"] }
+        sl_source:            { type: ["string", "null"] }
+        sl_atr_dist:          { type: ["number", "null"] }
+        sl_ob_dist:           { type: ["number", "null"] }
+        sl_distance:          { type: ["number", "null"] }
+        atr:                  { type: ["number", "null"] }
+        ob_confidence:        { type: ["string", "null"] }
+        ob_imbalance:         { type: ["string", "null"] }
+        allowed:              { type: ["string", "null"] }
+        rejection_reason:     { type: ["string", "null"] }
+
+    Position:
+      type: object
+      required: [timestamp, symbol, signal, entry_price, close_price]
+      properties:
+        timestamp:           { type: string }
+        symbol:              { type: string }
+        signal:              { type: string }
+        entry_price:         { type: ["number", "null"] }
+        close_price:         { type: ["number", "null"] }
+        stop_loss_at_close:  { type: ["number", "null"] }
+        take_profit:         { type: ["number", "null"] }
+        quantity:            { type: ["number", "null"] }
+        gross_pnl:           { type: ["number", "null"] }
+        net_pnl:             { type: ["number", "null"] }
+        total_cost:          { type: ["number", "null"] }
+        trailing_active:     { type: ["string", "null"] }
+        exit_reason:         { type: ["string", "null"] }
+        exit_type:           { type: ["string", "null"] }
+
+    BotSummary:
+      type: object
+      required: [total_signals, total_trades_evaluated, win_rate, total_net_pnl, paper_balance]
+      properties:
+        total_signals:          { type: integer }
+        long_signals:           { type: integer }
+        short_signals:          { type: integer }
+        neutral_signals:        { type: integer }
+        total_trades_evaluated: { type: integer }
+        trades_approved:        { type: integer }
+        trades_rejected:        { type: integer }
+        win_count:              { type: integer }
+        loss_count:             { type: integer }
+        win_rate:               { type: number }
+        total_gross_pnl:        { type: number }
+        total_net_pnl:          { type: number }
+        avg_win:                { type: number }
+        avg_loss:               { type: number }
+        avg_rr:                 { type: number }
+        max_drawdown:           { type: number }
+        exit_tp_count:          { type: integer }
+        exit_sl_count:          { type: integer }
+        exit_ts_count:          { type: integer }
+        open_positions_count:   { type: integer }
+        paper_balance:          { type: number }
+        current_balance:        { type: number }
+
+    SymbolStat:
+      type: object
+      required: [symbol, trades, win_count, loss_count, win_rate, total_net_pnl]
+      properties:
+        symbol:        { type: string }
+        trades:        { type: integer }
+        win_count:     { type: integer }
+        loss_count:    { type: integer }
+        win_rate:      { type: number }
+        total_net_pnl: { type: number }
+        avg_net_pnl:   { type: number }
+
+    SizingRecord:
+      type: object
+      required: [timestamp, symbol, signal]
+      properties:
+        timestamp:          { type: string }
+        symbol:             { type: string }
+        signal:             { type: ["string", "null"] }
+        dollar_risk_target: { type: ["number", "null"] }
+        dollar_risk_actual: { type: ["number", "null"] }
+        reduction_factor:   { type: ["number", "null"] }
+        margin_used:        { type: ["number", "null"] }
+        margin_pct:         { type: ["number", "null"] }
+        adjustment_reason:  { type: ["string", "null"] }
+        notional:           { type: ["number", "null"] }
+        net_profit:         { type: ["number", "null"] }
+
+    SummaryBlock:
+      type: object
+      required: [block, start_cycle, end_cycle, timestamp, trades_opened, trades_closed]
+      properties:
+        block:                  { type: integer }
+        start_cycle:            { type: integer }
+        end_cycle:              { type: integer }
+        timestamp:              { type: string }
+        trades_opened:          { type: integer }
+        trades_closed:          { type: integer }
+        win_count:              { type: integer }
+        loss_count:             { type: integer }
+        win_rate:               { type: number }
+        expectancy:             { type: number }
+        profit_factor:          { type: number }
+        max_drawdown:           { type: number }
+        total_net_pnl:          { type: number }
+        mark_to_market_closes:  { type: integer }
+
+    Alert:
+      type: object
+      required: [type, severity, blockIds, metric, values, triggered, confidence]
+      properties:
+        type:      { type: string }
+        severity:  { type: string }
+        blockIds:
+          type: array
+          items: { type: integer }
+        metric:    { type: string }
+        values:
+          type: array
+          items: { type: number }
+        triggered:  { type: boolean }
+        confidence: { type: number, minimum: 0, maximum: 1 }
+
+    AlertsResponse:
+      type: object
+      required: [timestamp, alerts]
+      properties:
+        timestamp: { type: integer }
+        alerts:
+          type: array
+          items:
+            $ref: "#/components/schemas/Alert"
+
+    PnlPoint:
+      type: object
+      required: [timestamp, cumulative_net_pnl, net_pnl, symbol]
+      properties:
+        timestamp:           { type: string }
+        symbol:              { type: string }
+        net_pnl:             { type: number }
+        cumulative_net_pnl:  { type: number }
+        exit_type:           { type: ["string", "null"] }

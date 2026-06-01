@@ -1,0 +1,4 @@
+timestamp,symbol,signal,entry_price,close_price,stop_loss_at_close,take_profit,quantity,gross_pnl,net_pnl,total_cost,trailing_active,exit_reason
+2026-06-01 01:18:46 UTC,BNBUSDT,SHORT,709.58,708.85,713.296399,702.147202,134.538837,98.213351,-264.557708,362.771059,False,mark_to_market
+2026-06-01 01:18:46 UTC,BTCUSDT,LONG,73575.7,73591.7,73354.762438,74017.575124,1.359144,21.746304,-358.253696,380.0,False,mark_to_market
+2026-06-01 01:18:46 UTC,XRPUSDT,LONG,1.3322,1.3317,1.326203,1.344194,75063.804234,-37.531902,-417.531902,380.0,False,mark_to_market
